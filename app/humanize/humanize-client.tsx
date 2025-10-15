@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Copy, Check } from "lucide-react";
+import { AnimatedTitle } from "@/components/animated-title";
 
 export function HumanizeClient() {
   const [inputText, setInputText] = useState("");
@@ -56,9 +57,9 @@ export function HumanizeClient() {
         <h1 className="text-4xl sm:text-5xl font-bold mb-4 tracking-tight">
           🤖 → 🙂
         </h1>
-        <h2 className="text-2xl sm:text-3xl font-semibold mb-3">
+        <AnimatedTitle className="text-2xl sm:text-3xl font-semibold mb-3">
           Humanize Your AI Text
-        </h2>
+        </AnimatedTitle>
         <p className="text-muted-foreground text-sm sm:text-base">
           Remove AI markers and make your text flow naturally
         </p>
