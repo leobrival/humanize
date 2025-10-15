@@ -5,8 +5,9 @@ import { humanizeString } from "humanize-ai-lib";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
-import { Copy, Check } from "lucide-react";
+import { Copy, Check, GitCompare } from "lucide-react";
 import { AnimatedTitle } from "@/components/animated-title";
+import { TextDiff } from "@/components/text-diff";
 
 export function HumanizeClient() {
   const [inputText, setInputText] = useState("");
@@ -14,6 +15,7 @@ export function HumanizeClient() {
   const [changeCount, setChangeCount] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showDiff, setShowDiff] = useState(false);
 
   const handleHumanize = () => {
     if (!inputText.trim()) return;
@@ -51,7 +53,7 @@ export function HumanizeClient() {
   };
 
   return (
-    <div className="container max-w-4xl mx-auto px-4 py-12 sm:py-20">
+    <div className="container max-w-7xl mx-auto px-4 py-12 sm:py-20">
       {/* Header */}
       <div className="text-center mb-12">
         <h1 className="text-4xl sm:text-5xl font-bold mb-4 tracking-tight">
@@ -65,88 +67,116 @@ export function HumanizeClient() {
         </p>
       </div>
 
-      {/* Main Interface */}
-      <div className="space-y-6">
+      {/* Actions Bar */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex gap-2">
+          {inputText && (
+            <Button variant="ghost" size="sm" onClick={handleClear}>
+              Clear
+            </Button>
+          )}
+          <Button
+            onClick={handleHumanize}
+            disabled={!inputText.trim() || isProcessing}
+            size="default"
+          >
+            {isProcessing ? "Processing..." : "Humanize Text"}
+          </Button>
+        </div>
+        {outputText && (
+          <div className="flex gap-2">
+            <Button
+              variant={showDiff ? "default" : "outline"}
+              size="sm"
+              onClick={() => setShowDiff(!showDiff)}
+            >
+              <GitCompare className="size-4 mr-2" />
+              {showDiff ? "Hide Diff" : "Show Diff"}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleCopy}
+              title="Copy to clipboard"
+            >
+              {copied ? (
+                <>
+                  <Check className="size-4 mr-2 text-green-600" />
+                  Copied
+                </>
+              ) : (
+                <>
+                  <Copy className="size-4 mr-2" />
+                  Copy
+                </>
+              )}
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* Main Interface - Side by Side */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Input Section */}
         <Card className="p-6">
           <label htmlFor="input-text" className="block text-sm font-medium mb-2">
-            Paste your AI-generated text
+            Original Text
           </label>
           <Textarea
             id="input-text"
             placeholder="Enter text to humanize..."
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            className="min-h-[200px] resize-none"
+            className="min-h-[400px] resize-none"
           />
           <div className="flex items-center justify-between mt-4">
             <span className="text-xs text-muted-foreground">
               {inputText.length} characters
             </span>
-            <div className="flex gap-2">
-              {inputText && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleClear}
-                >
-                  Clear
-                </Button>
-              )}
-              <Button
-                onClick={handleHumanize}
-                disabled={!inputText.trim() || isProcessing}
-                size="lg"
-              >
-                {isProcessing ? "Processing..." : "Humanize Text"}
-              </Button>
-            </div>
           </div>
         </Card>
 
         {/* Output Section */}
-        {outputText && (
-          <Card className="p-6">
-            <div className="flex items-center justify-between mb-2">
-              <label htmlFor="output-text" className="text-sm font-medium">
-                Humanized text
-              </label>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={handleCopy}
-                title="Copy to clipboard"
-              >
-                {copied ? (
-                  <Check className="size-4 text-green-600" />
-                ) : (
-                  <Copy className="size-4" />
-                )}
-              </Button>
-            </div>
-            <Textarea
-              id="output-text"
-              value={outputText}
-              readOnly
-              className="min-h-[200px] resize-none bg-muted/30"
-            />
-            <div className="flex items-center justify-between mt-4">
-              <span className="text-xs text-muted-foreground">
-                {outputText.length} characters
-              </span>
-              {changeCount > 0 && (
-                <span className="text-xs text-green-600 font-medium">
-                  ✓ {changeCount} {changeCount === 1 ? "change" : "changes"} made
-                </span>
+        <Card className="p-6">
+          <label htmlFor="output-text" className="block text-sm font-medium mb-2">
+            Humanized Text
+          </label>
+          {outputText ? (
+            <>
+              {showDiff ? (
+                <TextDiff original={inputText} modified={outputText} />
+              ) : (
+                <Textarea
+                  id="output-text"
+                  value={outputText}
+                  readOnly
+                  className="min-h-[400px] resize-none bg-muted/30"
+                />
               )}
-              {changeCount === 0 && (
+              <div className="flex items-center justify-between mt-4">
                 <span className="text-xs text-muted-foreground">
-                  No changes needed
+                  {outputText.length} characters
                 </span>
-              )}
+                {changeCount > 0 && (
+                  <span className="text-xs text-green-600 font-medium">
+                    ✓ {changeCount} {changeCount === 1 ? "change" : "changes"} made
+                  </span>
+                )}
+                {changeCount === 0 && (
+                  <span className="text-xs text-muted-foreground">
+                    No changes needed
+                  </span>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="min-h-[400px] flex items-center justify-center border rounded-md bg-muted/30">
+              <p className="text-sm text-muted-foreground">
+                Result will appear here...
+              </p>
             </div>
-          </Card>
-        )}
+          )}
+        </Card>
       </div>
 
       {/* Footer Info */}
